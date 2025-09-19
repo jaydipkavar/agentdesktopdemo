@@ -775,8 +775,6 @@ ipcMain.handle("close-playwright", async () => {
 
 app.setName("AgentAct");
 app.whenReady().then(() => {
-    createWindow();
-
     win.once("ready-to-show", () => {
         if (!isDev) {
             autoUpdater.checkForUpdatesAndNotify();
@@ -832,6 +830,7 @@ app.whenReady().then(() => {
                 }
             });
     });
+    createWindow();
 });
 app.on("window-all-closed", () => {
     if (process.platform !== "darwin") {
