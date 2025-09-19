@@ -16,6 +16,11 @@ contextBridge.exposeInMainWorld("electronAPI", {
     waitForPage: () => ipcRenderer.invoke("waitForPage"),
     setViewportSize: (viewport) =>
         ipcRenderer.invoke("set-viewport-size", viewport),
+    onUpdateAvailable: (callback) => ipcRenderer.on("update_available", (_event, value) => callback(value)),
+    onUpdateNotAvailable: (callback) => ipcRenderer.on("update_not_available", (_event, value) => callback(value)),
+    onUpdateError: (callback) => ipcRenderer.on("update_error", (_event, value) => callback(value)),
+    onDownloadProgress: (callback) => ipcRenderer.on("download_progress", (_event, value) => callback(value)),
+    onUpdateDownloaded: (callback) => ipcRenderer.on("update_downloaded", (_event, value) => callback(value)),
 });
 
 contextBridge.exposeInMainWorld('api', {
