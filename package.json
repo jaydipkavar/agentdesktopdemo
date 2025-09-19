@@ -7,8 +7,8 @@
   "type": "module",
   "main": "electron/main.js",
   "author": {
-    "name": "AgentAct Team",
-    "email": "agnetact@gmail.com"
+    "name": "jaydeep",
+    "email": "pateljaydeep1624@gmail.com"
   },
   "scripts": {
     "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron . --win\"",
@@ -25,33 +25,33 @@
       "electron"
     ],
     "extraResources": [
-  {
-    "from": "node_modules/playwright-core/.local-browsers",
-    "to": "playwright-browsers",
-    "filter": [
-      "**/*"
-    ]
-  },
-  {
-    "from": "node_modules/playwright-core",
-    "to": "playwright-core"
-  },
-  {
-    "from": "node_modules/electron/dist/icudtl.dat",
-    "to": "icudtl.dat"
-  },
-  {
-    "from": "node_modules/electron/dist/locales",
-    "to": "locales"
-  }
-],
+      {
+        "from": "node_modules/playwright-core/.local-browsers",
+        "to": "playwright-browsers",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "node_modules/playwright-core",
+        "to": "playwright-core"
+      },
+      {
+        "from": "node_modules/electron/dist/icudtl.dat",
+        "to": "icudtl.dat"
+      },
+      {
+        "from": "node_modules/electron/dist/locales",
+        "to": "locales"
+      }
+    ],
     "asarUnpack": [
       "node_modules/playwright-core/**/*"
     ],
-  "directories": {
-    "buildResources": "assets",
-    "output": "dist"
-  },
+    "directories": {
+      "buildResources": "assets",
+      "output": "dist"
+    },
     "win": {
       "icon": "assets/icon.ico",
       "target": [
@@ -63,11 +63,11 @@
         }
       ]
     },
-      "nsis": {
-    "oneClick": false,
-    "perMachine": true,
-    "allowToChangeInstallationDirectory": true
-  },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true
+    },
     "mac": {
       "icon": "assets/icon.icns"
     },
@@ -77,6 +77,11 @@
         "AppImage"
       ],
       "category": "Utility"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "jaydipkavar",
+      "repo": "agentdesktopdemo"
     }
   },
   "dependencies": {
@@ -92,6 +97,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dexie": "^4.0.11",
+    "electron-updater": "^6.6.2",
     "express": "^5.1.0",
     "framer-motion": "^12.23.12",
     "lucide-react": "^0.525.0",

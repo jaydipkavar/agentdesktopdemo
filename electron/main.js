@@ -1,4 +1,6 @@
-import { app, BrowserWindow, ipcMain, Menu } from "electron";
+import { app, BrowserWindow, ipcMain, Menu, dialog } from "electron";
+import pkg from 'electron-updater';
+const { autoUpdater } = pkg;
 import { platform } from "os";
 import path from "path";
 import { dirname } from "path";
@@ -773,7 +775,48 @@ ipcMain.handle("close-playwright", async () => {
 });
 
 app.setName("AgentAct");
-app.whenReady().then(createWindow);
+
+app.whenReady().then(() => {
+    createWindow();
+
+    autoUpdater.checkForUpdatesAndNotify();
+
+    ipcMain.on("check_for_update", () => {
+        autoUpdater.checkForUpdatesAndNotify();
+    });
+
+    autoUpdater.on("update-available", (info) => {
+        win.webContents.send("update_available", info);
+    });
+
+    autoUpdater.on("update-not-available", (info) => {
+        win.webContents.send("update_not_available", info);
+    });
+
+    autoUpdater.on("error", (err) => {
+        win.webContents.send("update_error", err);
+    });
+
+    autoUpdater.on("download-progress", (progressObj) => {
+        win.webContents.send("download_progress", progressObj);
+    });
+
+    autoUpdater.on("update-downloaded", (info) => {
+        win.webContents.send("update_downloaded", info);
+        const dialogOpts = {
+            type: "info",
+            buttons: ["Restart", "Later"],
+            title: "Application Update",
+            message: process.platform === "win32" ? info.releaseNotes : info.releaseName,
+            detail: "A new version has been downloaded. Restart the application to apply the updates.",
+        };
+
+        dialog.showMessageBox(dialogOpts).then((returnValue) => {
+            if (returnValue.response === 0) autoUpdater.quitAndInstall();
+        });
+    });
+});
+
 
 app.on("window-all-closed", () => {
     if (process.platform !== "darwin") {
