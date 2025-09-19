@@ -1,12 +1,12 @@
 import { app, BrowserWindow, ipcMain, Menu, dialog } from "electron";
-import pkg from 'electron-updater';
-const { autoUpdater } = pkg;
 import { platform } from "os";
 import path from "path";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import { chromium } from "playwright";
 import express from "express";
+import pkg from 'electron-updater';
+const { autoUpdater } = pkg;
 
 let win;
 let server;
@@ -757,7 +757,6 @@ ipcMain.handle("performActionNew", async (event, actionObj) => {
     return actionResponse;
 });
 
-
 ipcMain.handle("close-playwright", async () => {
     try {
         if (playwrightBrowser) {
@@ -775,49 +774,65 @@ ipcMain.handle("close-playwright", async () => {
 });
 
 app.setName("AgentAct");
-
 app.whenReady().then(() => {
     createWindow();
 
-    autoUpdater.checkForUpdatesAndNotify();
+    win.once("ready-to-show", () => {
+        if (!isDev) {
+            autoUpdater.checkForUpdatesAndNotify();
+        }
+    });
 
-    ipcMain.on("check_for_update", () => {
-        autoUpdater.checkForUpdatesAndNotify();
+    autoUpdater.on("checking-for-update", () => {
+        console.log("Checking for updates...");
     });
 
     autoUpdater.on("update-available", (info) => {
-        win.webContents.send("update_available", info);
+        console.log("Update available:", info.version);
+        dialog.showMessageBox(win, {
+            type: "info",
+            title: "Update Available",
+            message: `A new version (${info.version}) is available. Downloading now...`,
+        });
     });
 
     autoUpdater.on("update-not-available", (info) => {
-        win.webContents.send("update_not_available", info);
+        console.log("Update not available:", info.version);
     });
 
     autoUpdater.on("error", (err) => {
-        win.webContents.send("update_error", err);
+        console.error("Error in auto-updater:", err);
+        dialog.showMessageBox(win, {
+            type: "error",
+            title: "Update Error",
+            message: `Failed to check for updates: ${err.message}`,
+        });
     });
 
-    autoUpdater.on("download-progress", (progressObj) => {
-        win.webContents.send("download_progress", progressObj);
+    autoUpdater.on("download-progress", (progress) => {
+        console.log(
+            `Download speed: ${
+                progress.bytesPerSecond
+            } - Downloaded ${progress.percent.toFixed(2)}%`
+        );
     });
 
     autoUpdater.on("update-downloaded", (info) => {
-        win.webContents.send("update_downloaded", info);
-        const dialogOpts = {
-            type: "info",
-            buttons: ["Restart", "Later"],
-            title: "Application Update",
-            message: process.platform === "win32" ? info.releaseNotes : info.releaseName,
-            detail: "A new version has been downloaded. Restart the application to apply the updates.",
-        };
-
-        dialog.showMessageBox(dialogOpts).then((returnValue) => {
-            if (returnValue.response === 0) autoUpdater.quitAndInstall();
-        });
+        console.log("Update downloaded:", info.version);
+        dialog
+            .showMessageBox(win, {
+                type: "info",
+                title: "Update Ready",
+                message: "Update downloaded. Restart app to apply the update?",
+                buttons: ["Restart", "Later"],
+            })
+            .then((result) => {
+                if (result.response === 0) {
+                    autoUpdater.quitAndInstall();
+                }
+            });
     });
 });
-
-
 app.on("window-all-closed", () => {
     if (process.platform !== "darwin") {
         // Close the express server when app quits
