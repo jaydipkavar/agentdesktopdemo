@@ -13,6 +13,7 @@
   "scripts": {
     "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron . --win\"",
     "build-linux": "vite build && electron-builder",
+    "build-mac": "vite build && electron-builder --mac",
     "start": "electron .",
     "pack": "electron-builder --dir",
     "dist": "electron-builder",
