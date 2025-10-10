@@ -21,6 +21,7 @@
   },
   "build": {
     "appId": "com.agentact.agentact-app",
+    "compression": "store",   
     "files": [
       "dist",
       "electron"
@@ -71,9 +72,11 @@
     "compression": "store", 
     "artifactName": "${productName}-Setup-${version}.${ext}"
     },
-    "mac": {
-      "icon": "assets/icon.icns"
+      "mac": {
+      "icon": "assets/icon.icns",
+      "target": ["dmg", "zip"]
     },
+
     "linux": {
       "icon": "assets/icon.png",
       "target": [
