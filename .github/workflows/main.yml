@@ -2,14 +2,15 @@ name: Electron CI/CD Auto Release
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:
     name: Build and Release (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 90 
+    timeout-minutes: 200 
 
     strategy:
       matrix:
@@ -42,8 +43,14 @@ jobs:
             BUILD_SCRIPT="build-mac"
           fi
 
-          echo "Publishing release..."
-          npm run $BUILD_SCRIPT -- --publish always
+          # If push on main -> publish, otherwise just build
+          if [[ "$GITHUB_EVENT_NAME" == "push" && "$GITHUB_REF" == "refs/heads/main" ]]; then
+            echo "Publishing release..."
+            npm run $BUILD_SCRIPT -- --publish always
+          else
+            echo "Building without publishing..."
+            npm run $BUILD_SCRIPT
+          fi
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
