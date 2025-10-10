@@ -3,7 +3,7 @@
   "productName": "AgentAct",
   "description": "AgentAct",
   "private": true,
-  "version": "3.1.1",
+  "version": "3.1.2",
   "type": "module",
   "main": "electron/main.js",
   "author": {
