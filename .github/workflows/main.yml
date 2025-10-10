@@ -3,6 +3,10 @@ name: Electron CI/CD Auto Release
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'package.json'   # only trigger when package.json changes
+      - 'src/**'         # include source files
+      - 'package-lock.json'
 
 jobs:
   build:
@@ -30,30 +34,30 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # 4️⃣ Setup Git identity (fix for npm version commit error)
+      # 4️⃣ Setup Git identity
       - name: Setup Git Identity
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      # 5️⃣ Bump version & create Git tag
-      - name: Bump version & create tag
-        id: version
+      # 5️⃣ Get version from package.json and create tag
+      - name: Create Git tag from package.json version
+        id: tag
         run: |
           VERSION=$(node -p "require('./package.json').version")
-          NEW_VERSION=$(echo $VERSION | awk -F. -v OFS=. '{$NF = $NF + 1; print}')
-          echo "Bumping version: $VERSION -> $NEW_VERSION"
+          echo "Using version from package.json: $VERSION"
           
-          # Bump version and create git tag
-          npm version $NEW_VERSION -m "ci: bump version to %s [skip ci]"
-          
-          # Push tag to GitHub
-          git push origin --tags
-          
-          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          # Check if tag already exists
+          if git rev-parse "refs/tags/v$VERSION" >/dev/null 2>&1; then
+            echo "Tag v$VERSION already exists, skipping tag creation."
+          else
+            git tag -a "v$VERSION" -m "Release v$VERSION"
+            git push origin "v$VERSION"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       # 6️⃣ Build & Publish Electron App
-      - name: Build and Publish App
+      - name: Build & Publish App
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         shell: bash
@@ -67,12 +71,12 @@ jobs:
             BUILD_SCRIPT="build-mac"
           fi
 
-          # Check if current commit has a tag
+          # Publish only if commit has tag
           if git describe --tags --exact-match > /dev/null 2>&1; then
-            echo "Tag found. Publishing release..."
+            echo "Tag exists. Publishing release..."
             npm run $BUILD_SCRIPT -- --publish always
           else
-            echo "No tag. Building without publishing..."
+            echo "No tag found. Building without publishing..."
             npm run $BUILD_SCRIPT
           fi
 
