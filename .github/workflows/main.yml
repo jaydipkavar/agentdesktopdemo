@@ -3,33 +3,50 @@ name: Electron CI/CD Auto Release
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
-    tags:- 'v*.*.*'
 
 jobs:
   build:
     name: Build and Release (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 90 
+    timeout-minutes: 90
 
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
+      # 1️⃣ Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # 2️⃣ Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
           cache: 'npm'
 
+      # 3️⃣ Install dependencies
       - name: Install dependencies
         run: npm ci
 
+      # 4️⃣ Bump version and create Git tag
+      - name: Bump version & create tag
+        id: version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          NEW_VERSION=$(echo $VERSION | awk -F. -v OFS=. '{$NF = $NF + 1; print}')
+          echo "Bumping version: $VERSION -> $NEW_VERSION"
+          
+          # Bump version and create git tag
+          npm version $NEW_VERSION -m "ci: bump version to %s [skip ci]"
+          
+          # Push tag to GitHub
+          git push origin --tags
+          
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      # 5️⃣ Build & Publish Electron App
       - name: Build and Publish App
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -44,15 +61,16 @@ jobs:
             BUILD_SCRIPT="build-mac"
           fi
 
-          # If push on main -> publish, otherwise just build
-          if [[ "$GITHUB_EVENT_NAME" == "push" && "$GITHUB_REF" == "refs/heads/main" ]]; then
-            echo "Publishing release..."
+          # Check if current commit has a tag
+          if git describe --tags --exact-match > /dev/null 2>&1; then
+            echo "Tag found. Publishing release..."
             npm run $BUILD_SCRIPT -- --publish always
           else
-            echo "Building without publishing..."
+            echo "No tag. Building without publishing..."
             npm run $BUILD_SCRIPT
           fi
 
+      # 6️⃣ Upload build artifact
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
