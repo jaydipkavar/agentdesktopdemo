@@ -30,7 +30,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # 4️⃣ Bump version and create Git tag
+      # 4️⃣ Setup Git identity (fix for npm version commit error)
+      - name: Setup Git Identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      # 5️⃣ Bump version & create Git tag
       - name: Bump version & create tag
         id: version
         run: |
@@ -46,7 +52,7 @@ jobs:
           
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-      # 5️⃣ Build & Publish Electron App
+      # 6️⃣ Build & Publish Electron App
       - name: Build and Publish App
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -70,7 +76,7 @@ jobs:
             npm run $BUILD_SCRIPT
           fi
 
-      # 6️⃣ Upload build artifact
+      # 7️⃣ Upload build artifact
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
