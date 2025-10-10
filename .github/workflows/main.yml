@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: Electron CI/CD Auto Release
 
 on:
   push:
@@ -8,46 +8,51 @@ on:
 
 jobs:
   build:
+    name: Build and Release (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
 
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version-file: '.nvmrc'
-        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Build and Optionally Publish
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        if [ "$RUNNER_OS" == "Linux" ]; then
-          BUILD_SCRIPT="build-linux"
-        elif [ "$RUNNER_OS" == "Windows" ]; then
-          BUILD_SCRIPT="build-win"
-        elif [ "$RUNNER_OS" == "macOS" ]; then
-          BUILD_SCRIPT="build-mac"
-        fi
+      - name: Build and Publish App
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        shell: bash
+        run: |
+          echo "Current OS: $RUNNER_OS"
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            BUILD_SCRIPT="build-linux"
+          elif [ "$RUNNER_OS" == "Windows" ]; then
+            BUILD_SCRIPT="build-win"
+          else
+            BUILD_SCRIPT="build-mac"
+          fi
 
-        if [[ "$GITHUB_EVENT_NAME" == "push" && "$GITHUB_REF" == "refs/heads/main" ]]; then
-          npm run $BUILD_SCRIPT -- --publish always
-        else
-          npm run $BUILD_SCRIPT
-        fi
-      shell: bash
-      
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ matrix.os }}-build
-        path: dist/
+          # If push on main -> publish, otherwise just build
+          if [[ "$GITHUB_EVENT_NAME" == "push" && "$GITHUB_REF" == "refs/heads/main" ]]; then
+            echo "Publishing release..."
+            npm run $BUILD_SCRIPT -- --publish always
+          else
+            echo "Building without publishing..."
+            npm run $BUILD_SCRIPT
+          fi
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-build
+          path: dist/
