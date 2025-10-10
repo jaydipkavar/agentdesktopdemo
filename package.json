@@ -65,9 +65,11 @@
       ]
     },
     "nsis": {
-      "oneClick": false,
-      "perMachine": true,
-      "allowToChangeInstallationDirectory": true
+    "oneClick": false,
+    "perMachine": true,
+    "allowToChangeInstallationDirectory": true,
+    "compression": "store", 
+    "artifactName": "${productName}-Setup-${version}.${ext}"
     },
     "mac": {
       "icon": "assets/icon.icns"
