@@ -69,7 +69,6 @@
     "oneClick": false,
     "perMachine": true,
     "allowToChangeInstallationDirectory": true,
-    "compression": "store", 
     "artifactName": "${productName}-Setup-${version}.${ext}"
     },
       "mac": {
