@@ -57,7 +57,7 @@ function LoginForm({
                 </div>
 
                 <div className="flex flex-col items-center gap-2">
-                    <h1 className="text-3xl font-bold text-black bg-green-500">Welcome</h1>
+                    <h1 className="text-3xl font-bold text-black bg-red-500">Welcome</h1>
                     <p className="text-gray-500">Sign in to continue</p>
                 </div>
             </div>
